@@ -1,0 +1,4 @@
+pandas
+spacy
+spacytextblob
+textblob
