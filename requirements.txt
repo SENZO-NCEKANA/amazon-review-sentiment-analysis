@@ -1,4 +1,5 @@
+joblib
+numpy
 pandas
-spacy
-spacytextblob
-textblob
+pytest
+scikit-learn

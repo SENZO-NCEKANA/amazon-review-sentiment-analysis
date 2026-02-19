@@ -1,104 +1,123 @@
-![Amazon Review Sentiment Analysis Banner](assets/banner.png)
+# Biologics Pharmacology AI Engineering Starter
 
-## Amazon Review Sentiment Analysis
+This repository provides an end-to-end AI/ML engineering baseline to
+**develop and validate data-driven models that improve decision making across
+drug discovery and development**, with a specific focus on
+**pharmacology dynamics of large molecules (biologics)**.
 
-Portfolio-ready sentiment analysis on Amazon product reviews using a
-reproducible, notebook-first workflow. The project focuses on clean NLP
-preprocessing, interpretable sentiment scoring, and clear reporting.
+The framework integrates:
+- **Structural properties** of biologics
+- **Preclinical PK/PD features**
+- **Clinical outcome targets**
 
-**TL;DR**: A clean, end-to-end NLP notebook that ingests real review data,
-cleans it, scores sentiment with SpacyTextBlob, and summarizes results in a
-portfolio-ready format.
+It is designed for cross-functional Quantitative Pharmacology (QP) workflows
+supporting multiple therapeutic areas and research platforms.
 
-### Problem Statement and Objectives
-Online product reviews contain valuable customer sentiment. This project:
-- Extracts and cleans review text from a real-world dataset
-- Scores sentiment using a rule-based, explainable approach
-- Demonstrates similarity analysis between reviews
-- Documents strengths, limitations, and next-step improvements
+## Why this project exists
 
-### Highlights
-- Uses `en_core_web_md` with spaCy and SpacyTextBlob polarity scoring
-- Text preprocessing with stop-word removal, lemmatization, and cleanup
-- Labeled sentiment output plus a review similarity comparison
-- Clear, modular steps with outputs shown in the notebook
+Early development teams need faster, better-informed go/no-go decisions.
+This project gives a practical, reproducible baseline for:
 
-### Key Skills Demonstrated
-- Data cleaning and preprocessing for NLP
-- spaCy pipeline setup and sentiment scoring
-- Interpretable classification with polarity thresholds
-- Result communication and technical documentation
+1. Analyzing and interpreting integrated preclinical + clinical datasets
+2. Designing Biology- and Pharmacology-grounded ML models
+3. Validating models with leakage-resistant grouped cross-validation
+4. Ranking candidate biologics using a transparent decision score
 
-### Project Structure
-- `sentiment_analysis.ipynb`: Notebook workflow and analysis
-- `Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv`: Dataset
-- `requirements.txt`: Python dependencies
+## Repository structure
 
-### Methodology
-1. Load the dataset and select the `reviews.text` column
-2. Drop missing values
-3. Normalize and clean text (lowercase, strip, stop-word removal)
-4. Compute polarity with SpacyTextBlob
-5. Map polarity to Positive / Neutral / Negative labels
-6. Compare similarity between two sample reviews
+```text
+biologics_pharmacology/
+  __init__.py
+  schema.py                # Required columns, features, targets, validation
+  modeling.py              # Grouped CV + multi-output model training
+  decision_support.py      # Candidate ranking with multi-objective score
 
-### Dataset and Preprocessing
-- Dataset: Datafiniti Amazon Consumer Reviews (May 2019)
-- Feature used: `reviews.text`
-- Cleaning steps:
-  - Convert to string, lowercase, strip whitespace
-  - Remove stop words and punctuation
-  - Lemmatize remaining tokens
+scripts/
+  generate_synthetic_biologics_data.py  # Synthetic demo data
+  train_biologics_model.py              # Train, validate, rank, and save model
 
-### Dataset Download
-The raw CSV is not included in the repository due to file size limits.
-Download it from Kaggle and place it in the project root with this exact name:
-`Datafiniti_Amazon_Consumer_Reviews_of_Amazon_Products_May19.csv`.
-
-Kaggle source:
-**https://www.kaggle.com/datasets/datafiniti/consumer-reviews-of-amazon-products**
-
-### Results and Example Output
-The notebook prints labeled samples and polarity scores, for example:
-```
-Review Index: 0
-Sentiment: Negative
-Polarity Score: -0.70
-```
-This provides a quick, interpretable view of sentiment strength.
-
-### Architectural Structure
-1. **Ingestion**: Load the CSV and select `reviews.text` with missing values removed.
-2. **Preprocessing**: Normalize text, remove stop words and punctuation, lemmatize.
-3. **Sentiment Scoring**: Apply SpacyTextBlob to compute polarity.
-4. **Labeling**: Map polarity to Positive/Negative/Neutral thresholds.
-5. **Evaluation**: Inspect sample predictions and compare review similarity.
-6. **Insights**: Note limitations and propose transformer-based improvements.
-
-```mermaid
-flowchart TD
-    A[CSV Dataset] --> B[Ingestion: load + dropna]
-    B --> C[Preprocessing: normalize + remove stop words]
-    C --> D[Sentiment Scoring: SpacyTextBlob polarity]
-    D --> E[Labeling: Positive / Neutral / Negative]
-    E --> F[Evaluation: samples + similarity]
-    F --> G[Insights: limitations + next steps]
+tests/
+  test_biologics_pipeline.py
 ```
 
-### Reproducibility
+## Modeling approach
+
+### Inputs
+- Structural descriptors (e.g., molecular weight, pI, aggregation propensity)
+- Preclinical pharmacology (e.g., clearance, half-life, efficacy, ADA)
+- Program context (e.g., modality, therapeutic area, development stage)
+
+### Predicted targets
+- `clinical_pk_half_life_day`
+- `clinical_pd_response_pct`
+- `severe_ae_rate_pct`
+
+### Validation strategy
+- **GroupKFold by molecule family** to reduce leakage across related molecules
+- Fold-level metrics:
+  - Mean Absolute Error (MAE)
+  - R²
+
+### Decision support
+Predictions are combined into a weighted score:
+- Higher predicted PD response = better
+- Higher predicted PK half-life = better
+- Lower predicted severe AE rate = better
+
+This yields a ranked candidate table for early development prioritization.
+
+## Quickstart
+
+### 1) Install dependencies
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python -m spacy download en_core_web_md
-python -m textblob.download_corpora
 ```
 
-### Run the Notebook
-Open `sentiment_analysis.ipynb` and run cells top to bottom. The notebook
-produces labeled outputs and similarity scores in the output cells.
+### 2) Generate synthetic biologics data
 
-### Limitations and Next Steps
-- Rule-based polarity can miss sarcasm or domain-specific nuance
-- Neutral threshold can be tuned with labeled validation data
-- A natural extension is fine-tuning transformer models (e.g., BERT)
+```bash
+python scripts/generate_synthetic_biologics_data.py \
+  --output-path data/synthetic_biologics.csv \
+  --samples 500 \
+  --seed 42
+```
+
+### 3) Train + validate models and rank candidates
+
+```bash
+python scripts/train_biologics_model.py \
+  --data-path data/synthetic_biologics.csv \
+  --model-path models/biologics_multitask_model.joblib \
+  --splits 5 \
+  --top-k 10
+```
+
+### 4) Run tests
+
+```bash
+pytest -q
+```
+
+## Example workflow architecture
+
+```mermaid
+flowchart TD
+    A[Integrated Biologics Dataset] --> B[Schema Validation]
+    B --> C[Feature Engineering: structure + preclinical + program context]
+    C --> D[Group-aware CV by molecule family]
+    D --> E[Multi-output model: PK, PD, Safety]
+    E --> F[Model Metrics: MAE and R2]
+    E --> G[Candidate Ranking Engine]
+    G --> H[Early Development Decision Support]
+```
+
+## Notes for production extension
+
+- Replace synthetic data with governed internal datasets
+- Add uncertainty estimation (e.g., conformal intervals)
+- Add model monitoring and drift detection
+- Integrate domain priors and mechanistic QSP features
+- Add model cards and audit logs for clinical governance
