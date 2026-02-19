@@ -38,6 +38,8 @@ scripts/
 
 tests/
   test_biologics_pipeline.py
+
+biologics_pharmacology_workflow.ipynb  # Step-by-step interactive notebook
 ```
 
 ## Modeling approach
@@ -95,7 +97,17 @@ python scripts/train_biologics_model.py \
   --top-k 10
 ```
 
-### 4) Run tests
+### 4) Open the Jupyter Notebook walkthrough
+
+Start Jupyter and open:
+
+- `biologics_pharmacology_workflow.ipynb`
+
+```bash
+jupyter notebook
+```
+
+### 5) Run tests
 
 ```bash
 pytest -q
